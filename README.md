@@ -16,7 +16,7 @@ I like to monitor my ephermal AWS Batch jobs to adjust vcpu and memory. There's 
 - grab the cmonitor_collector and add it to my src dir of my containers
 
 ```
-   docker run -it
+   docker run -it  -v"/Users/tweep:/tmp" ehive-sentieon-jg:latest
    git clone https://github.com/tweep/cmonitor.git 
    cd cmonitor
    make
