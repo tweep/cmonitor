@@ -194,7 +194,7 @@ will collect all performance stats of the baremetal. Just run it
 
 ```
 docker run -d \
-    --name=cmonitor-baremetal-collector
+    --name=cmonitor-baremetal-collector \
     -v /root:/perf \
     f18m/cmonitor
 ```
