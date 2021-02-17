@@ -8,6 +8,24 @@ A **Docker, LXC, database-free, lightweight container performance monitoring sol
 (e.g. containers used for DevOps automatic testing). Can also be used with InfluxDB and Grafana to monitor long-lived 
 containers in real-time.
 
+## Tweep's purpose 
+I like to monitor my ephermal AWS Batch jobs to adjust vcpu and memory. There's currently (2021) no ideal way to do this, especially if you run AWS Batch in large scale. 
+
+### My steps 
+- build cmonitor on ubuntu 
+- grab the cmonitor_collector and add it to my src dir of my containers
+
+```
+   docker run -it
+   git clone https://github.com/tweep/cmonitor.git 
+   cd cmonitor
+   make
+   ls src/cmonitor_collector
+   ./cmonitor_collector
+   
+```
+
+
 The project is composed by 2 tools: 
 1) a **lightweight agent** (80KB, native binary; no JVM, Python or other interpreters needed) to collect actual CPU/memory/disk statistics (Linux-only)
    and store them in a JSON file;
