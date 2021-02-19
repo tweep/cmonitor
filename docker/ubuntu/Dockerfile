@@ -1,19 +1,24 @@
-FROM alpine:3.7
+
+FROM ubuntu:18.04
+
 
 # Build with 
-# cd cmonitor 
-# docker build -f jhv/Dockerfile -t cmonitor:latest .  
+# cd cmonitor  
 #
-# docker build -f jhv/Dockerfile -t cmonitor:latest . 
+# docker build -f docker/ubuntu/Dockerfile -t cmonitor:latest .  
+#
+# docker run -it -v "/tmp:/tmp"  cmonitor:latest 
 #
 # make sure you did run the "cmonitor_musl" target before building this image: 
-RUN apk add libstdc++ libc6-compat build-base bash
+#RUN apk add libstdc++ libc6-compat build-base bash
 
-
+RUN apt-get update -y 
+RUN apt-get install -y libstdc++6 build-essential libc6-i386 bash 
+ 
 COPY $PWD . 
 RUN  make && cp  src/cmonitor_collector /usr/bin/
-ENTRYPOINT ["/bin/bash"]
-
+CMD "/bin/bash"
+ 
 # finally run the cmonitor collector 
 #  - in foreground since Docker does not like daemons
 #  - do not collect "cgroups": in this way we just collect baremetal performance stats
