@@ -195,9 +195,10 @@ public:
     std::string m_strOutputDir; // --output-directory
     std::string m_strOutputFilenamePrefix; // --output-filename
 
-    // remove streaming opts
+    // remote streaming opts
     std::string m_strRemoteAddress; // --remote-ip
     std::string m_strRemoteSecret; // --remote-secret
+    std::string m_strContainerName; // --container-name
     uint64_t m_nRemotePort = 0; // --remote-port
 
     // data collecting options
@@ -240,9 +241,10 @@ class CMonitorCollectorApp {
 public:
     CMonitorCollectorApp() {}
 
-    void init_defaults();
+    void init_defaults(); // sets defaults and get_hostname() :-()
     void parse_args(int argc, char** argv);
     int run(int argc, char** argv);
+
 
 private:
     void print_help();

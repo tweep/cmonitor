@@ -290,7 +290,11 @@ cmonitor_collector --remote-ip=1.2.3.4 --remote-port=8086
 The InfluxDB instance can then be used as data source for graphing tools like [Grafana](https://grafana.com/)
 which allow you to create nice interactive dashboards like the following one:
 
-![Basic Dashboard Example](examples/grafana-dashboards/BasicDashboardExample.png)
+![Basic Dashboard Example](examples/grafana-dashboards/BasicDashboardExample.png) 
+
+![Grafana Basic Dashboard JSON](examples/grafana-dashboards/BasicDashboardExample.json) 
+
+![Setup Grafana and InfluxDB ](README_monitoring.md)
 
 You can also play with the [live dashboard example](https://snapshot.raintank.io/dashboard/snapshot/JdX4hDukUCGuJHsXymM86KbFO5LC9GrY?orgId=2&from=1558478922136&to=1558479706448)
 

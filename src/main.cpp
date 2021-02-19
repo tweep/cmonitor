@@ -72,6 +72,9 @@ struct option g_long_opts[] = {
     { "remote-port", required_argument, 0, 'p' }, // force newline
     { "remote-secret", required_argument, 0, 'X' }, // force newline
 
+   // Option to name the container (defaut = hostname )
+    { "container-name", required_argument, 0, 'n' }, // force newline
+ 
     // Other options
     { "version", no_argument, 0, 'v' }, // force newline
     { "debug", no_argument, 0, 'd' }, // force newline
@@ -134,15 +137,18 @@ struct option_extended {
     { "Options to stream data remotely", &g_long_opts[10],
         "IP address or hostname of the InfluxDB instance to send measurements to;\n"
         "cmonitor_collector will use a database named 'cmonitor' to store them." },
+      
     { "Options to stream data remotely", &g_long_opts[11], "Port used by InfluxDB." },
     { "Options to stream data remotely", &g_long_opts[12],
         "Set the InfluxDB collector secret (by default use environment variable CMONITOR_SECRET).\n" },
+    // Options to name the ouput / container
+    { "Options to name the report or container ", &g_long_opts[13], "Name of the report (if u don't want to use hostname)" },
 
     // help
-    { "Other options", &g_long_opts[13], "Show version and exit" }, // force newline
-    { "Other options", &g_long_opts[14],
+    { "Other options", &g_long_opts[14], "Show version and exit" }, // force newline
+    { "Other options", &g_long_opts[15],
         "Enable debug mode; automatically activates --foreground mode" }, // force newline
-    { "Other options", &g_long_opts[15], "Show this help" },
+    { "Other options", &g_long_opts[16], "Show this help" },
 
     { NULL, NULL, NULL }
 };
@@ -379,8 +385,18 @@ void CMonitorCollectorApp::init_defaults()
     if (getenv("CMONITOR_SECRET"))
         g_cfg.m_strRemoteSecret = getenv("CMONITOR_SECRET");
 
+    // read environment variables first and set variables to values.
+    // do not do this in the downstream methods. env vars override all.
+    // g_cfg.m_strContainerName is used in get_hostname()
+    if (getenv("CONTAINER_NAME"))
+       g_cfg.m_strContainerName = getenv("CONTAINER_NAME");
+
     // output file names
-    get_hostname();
+    // we pass the global g_cfg.conatinername into the function as get_hostname
+    // does not now about g_cfg variables
+
+    // issue: get_hostname() is called init_defaults, but has to be called in parse_args()
+    //get_hostname();    
 
     time_t timer; /* used to work out the time details*/
     struct tm* tim = nullptr; /* used to work out the local hour/min/second */
@@ -483,6 +499,10 @@ void CMonitorCollectorApp::parse_args(int argc, char** argv)
             case 'i':
                 g_cfg.m_strRemoteAddress = optarg;
                 break;
+                // set hostname with --container
+            case 'n':
+                g_cfg.m_strContainerName = optarg;
+                break;    
             case 'p':
                 if (!string2int(optarg, g_cfg.m_nRemotePort)) {
                     printf("Unrecognized remote port: %s\n", optarg);
@@ -547,20 +567,30 @@ void CMonitorCollectorApp::parse_args(int argc, char** argv)
 std::string CMonitorCollectorApp::get_hostname()
 {
     DEBUGLOG_FUNCTION_START();
+    // we were here before , just return as all values are set :-)
     if (!m_strHostname.empty())
         return m_strHostname;
 
     char hostname[1024];
-    if (gethostname(hostname, sizeof(hostname)) != 0)
-        m_strHostname = "unknown-hostname";
-    else
-        m_strHostname = hostname;
 
-    for (size_t i = 0; i < strlen(hostname); i++)
+    // Note: init_defaults() reads ENV{CONTAINER_NAME} and sets 
+    // g_cfg.m_strContainerName variable, if set.
+
+    // if the --container-name option is used together with the ENV VAR
+    //  CONTAINER_NAME, --container-name gets precedence
+
+    if (!g_cfg.m_strContainerName.empty()) {        
+        m_strHostname = g_cfg.m_strContainerName; 
+    }else if (gethostname(hostname, sizeof(hostname)) != 0) {
+       m_strHostname = "unknown-hostname";
+    }else{
+        m_strHostname = hostname;
+    }
+    for (size_t i = 0; i < strlen(m_strHostname.c_str()); i++)
         if (hostname[i] == '.')
             break;
         else
-            m_strShortHostname.push_back(hostname[i]);
+            m_strShortHostname.push_back(m_strHostname[i]);
 
     return m_strHostname;
 }
@@ -631,6 +661,7 @@ void CMonitorCollectorApp::check_pid_file()
 
 int CMonitorCollectorApp::run(int argc, char** argv)
 {
+    get_hostname(); // set hostname
     // if only one instance allowed, do the check:
     if (!g_cfg.m_bAllowMultipleInstances)
         check_pid_file();
@@ -698,7 +729,7 @@ int CMonitorCollectorApp::run(int argc, char** argv)
 
     // write stuff that is present only in the very first sample (never changes):
     g_output.pheader_start();
-    header_identity();
+    header_identity(); // will call get_hostname()
     header_cmonitor_info(argc, argv, g_cfg.m_nSamplingInterval, g_cfg.m_nSamples, g_cfg.m_nCollectFlags);
     header_etc_os_release();
     header_version();
